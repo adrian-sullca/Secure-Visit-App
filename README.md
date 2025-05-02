@@ -1,0 +1,1 @@
+![DIAGRAMA ENTIDAD RELACIÓN](./backend/public/DiagramaERSecureVisit.png)

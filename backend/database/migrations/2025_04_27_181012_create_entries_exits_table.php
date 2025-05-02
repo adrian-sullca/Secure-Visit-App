@@ -14,13 +14,13 @@ return new class extends Migration
         Schema::create('entries_exits', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('visitor_id');
+            $table->unsignedBigInteger('visit_id');
             $table->enum('action', ['entry', 'exit']);
             $table->timestamp('date_entry')->nullable();
             $table->timestamp('date_exit')->nullable();
             $table->timestamps();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('visitor_id')->references('id')->on('visitors')->onDelete('cascade');
+            $table->foreign('visit_id')->references('id')->on('visits')->onDelete('cascade');
         });
     }
 
