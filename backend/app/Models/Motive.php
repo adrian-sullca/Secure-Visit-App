@@ -7,8 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Motive extends Model
 {
     protected $fillable = [
-        'motive',
-        'description'
+        'name'
     ];
 
     public function familyVisits()

@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('motives', function (Blueprint $table) {
             $table->id();
-            $table->string('motive');
-            $table->string('description');
+            $table->string('name');
+            $table->boolean('enabled')->default(true);
             $table->timestamps();
         });
     }
