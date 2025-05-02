@@ -4,10 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Laravel\Sanctum\PersonalAccessToken;
+use Illuminate\Http\JsonResponse;
 
 abstract class Controller
 {
-    public function authenticateUser(Request $request)
+    protected function getAuthenticatedUser(Request $request)
     {
         $token = $request->bearerToken();
         if (!$token) {
@@ -20,8 +21,32 @@ abstract class Controller
             return response()->json(['message' => 'Authentication required. Please log in.'], 401);
         }
 
-        $user = $accessToken->tokenable;
+        return $accessToken->tokenable;
+    }
 
-        return $user;
+    public function authenticateUser(Request $request)
+    {
+        $userOrResponse = $this->getAuthenticatedUser($request);
+
+        if ($userOrResponse instanceof JsonResponse) {
+            return $userOrResponse;
+        }
+
+        return $userOrResponse;
+    }
+
+    protected function authenticateAdmin(Request $request)
+    {
+        $userOrResponse = $this->getAuthenticatedUser($request);
+
+        if ($userOrResponse instanceof JsonResponse) {
+            return $userOrResponse;
+        }
+
+        if ($userOrResponse->admin == 0) {
+            return response()->json(['message' => 'You do not have permissions to perform this action'], 403);
+        }
+
+        return $userOrResponse;
     }
 }
