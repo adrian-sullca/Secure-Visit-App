@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Motive extends Model
 {
     protected $fillable = [
-        'name'
+        'name',
+        'enabled'
     ];
 
     public function familyVisits()

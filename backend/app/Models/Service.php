@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Service extends Model
 {
     protected $fillable = [
-        'service'
+        'name',
+        'enabled'
     ];
 
     public function professionals()
