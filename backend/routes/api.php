@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\EntryExitController;
 use App\Http\Controllers\MotiveController;
 use App\Http\Controllers\ServiceController;
 use Illuminate\Support\Facades\Route;
@@ -22,4 +23,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/service/{service}', [ServiceController::class, 'show']);
     Route::put('/service/{service}', [ServiceController::class, 'update']);
     Route::delete('/service/{service}', [ServiceController::class, 'destroy']);
+    // EntryExits
+    Route::post('/entry', [EntryExitController::class, 'storeEntry']);
+    Route::post('/exit/{entry}', [EntryExitController::class, 'storeExit']);
+    Route::delete('/entry/{entry}', [EntryExitController::class, 'destroy']);
 });
