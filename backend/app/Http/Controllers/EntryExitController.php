@@ -17,17 +17,58 @@ class EntryExitController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
-    }
+        $userOrResponse = $this->authenticateUser($request);
+        if ($userOrResponse instanceof JsonResponse) {
+            return $userOrResponse;
+        }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        $query = EntryExit::query();
+
+        // GET /entry-exits?action=entry
+        // GET /entry-exits?action=exit
+        // GET /entry-exits?date=2025-05-04
+        // GET /entry-exits?action=exit&from=2025-05-04T08:00&to=2025-05-04T14:00  
+
+        if ($request->has('action')) {
+            if ($request->action === 'entry') {
+                $query->whereNotNull('date_entry');
+            } elseif ($request->action === 'exit') {
+                $query->whereNotNull('date_exit');
+            }
+        }
+
+        if ($request->has('visit_type')) {
+            if (in_array($request->visit_type, ['family', 'professional'])) {
+                $query->where('visit_type', $request->visit_type);
+            }
+        }
+
+        if ($request->has('date')) {
+            $query->whereDate('date_entry', $request->date)
+                ->orWhereDate('date_exit', $request->date);
+        }
+
+        if ($request->has(['from', 'to'])) {
+            if ($request->action === 'exit') {
+                $query->whereBetween('date_exit', [$request->from, $request->to]);
+            } elseif ($request->action === 'entry') {
+                $query->whereBetween('date_entry', [$request->from, $request->to])
+                    ->orWhereBetween('date_exit', [$request->from, $request->to]);
+            } else {
+                $query->where(function ($q) use ($request) {
+                    $q->whereBetween('date_entry', [$request->from, $request->to])
+                        ->orWhereBetween('date_exit', [$request->from, $request->to]);
+                });
+            }
+        }
+
+        $entryExits = $query->get();
+
+        return response()->json([
+            'entry-exits' => $entryExits,
+        ], 200);
     }
 
     /**
