@@ -27,11 +27,6 @@ abstract class Controller
     public function authenticateUser(Request $request)
     {
         $userOrResponse = $this->getAuthenticatedUser($request);
-
-        if ($userOrResponse instanceof JsonResponse) {
-            return $userOrResponse;
-        }
-
         return $userOrResponse;
     }
 
