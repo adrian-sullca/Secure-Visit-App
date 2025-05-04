@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\ActionType;
+use App\VisitType;
 use Illuminate\Database\Eloquent\Model;
 
 class EntryExit extends Model
@@ -10,13 +10,13 @@ class EntryExit extends Model
     protected $fillable = [
         'user_id',
         'visit_id',
-        'action',
+        'visit_type',
         'date_entry',
         'date_exit'
     ];
 
     protected $casts = [
-        'action' => ActionType::class,
+        'visit_type' => VisitType::class,
     ];
 
     public function visit()

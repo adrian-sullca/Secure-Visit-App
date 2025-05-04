@@ -11,7 +11,8 @@ class FamilyVisit extends Model
         'student_name',
         'student_surname',
         'student_course',
-        'motive_id'
+        'motive_id',
+        'custom_motive'
     ];
 
     public function visit() {
