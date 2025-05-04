@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('student_surname');
             $table->string('student_course');
             $table->unsignedBigInteger('motive_id');
+            $table->string('custom_motive')->nullable();
             $table->timestamps();
             $table->foreign('visit_id')->references('id')->on('visits')->onDelete('cascade');
             $table->foreign('motive_id')->references('id')->on('motives')->onDelete('cascade');

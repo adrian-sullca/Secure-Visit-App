@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('entries_exits', function (Blueprint $table) {
+        Schema::create('entry_exits', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('visit_id');
-            $table->enum('action', ['entry', 'exit']);
+            $table->enum('visit_type', ['family', 'professional']);
             $table->timestamp('date_entry')->nullable();
             $table->timestamp('date_exit')->nullable();
             $table->timestamps();
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('entries_exits');
+        Schema::dropIfExists('entry_exits');
     }
 };
