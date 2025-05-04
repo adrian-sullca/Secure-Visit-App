@@ -127,9 +127,19 @@ class EntryExitController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
-        //
+        $userOrResponse = $this->authenticateUser($request);
+
+        if ($userOrResponse instanceof JsonResponse) {
+            return $userOrResponse;
+        }
+
+        $entryExit = EntryExit::with(['visit.familyVisit', 'visit.professionalVisit'])->findOrFail($id);
+
+        return response()->json([
+            'entry-exit' => $entryExit,
+        ], 200);
     }
 
     /**

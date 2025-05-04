@@ -27,4 +27,5 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/entry', [EntryExitController::class, 'storeEntry']);
     Route::post('/exit/{entry}', [EntryExitController::class, 'storeExit']);
     Route::delete('/entry/{entry}', [EntryExitController::class, 'destroy']);
+    Route::get('/entry/{entry}', [EntryExitController::class, 'show']);
 });
