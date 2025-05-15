@@ -14,9 +14,15 @@
     "@remix-run/node": "^2.16.6",
     "@remix-run/react": "^2.16.6",
     "@remix-run/serve": "^2.16.6",
+    "i18next": "^23.16.8",
+    "i18next-browser-languagedetector": "^8.1.0",
+    "i18next-fetch-backend": "^6.0.0",
     "isbot": "^4.1.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-i18next": "^15.5.1",
+    "remix-i18next": "^6.4.1",
+    "rsuite": "^5.80.2"
   },
   "devDependencies": {
     "@remix-run/dev": "^2.16.6",
