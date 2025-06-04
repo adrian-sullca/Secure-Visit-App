@@ -28,4 +28,9 @@ class EntryExit extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function professionalService()
+    {
+        return $this->hasOne(ProfessionalService::class, 'entry_exit_id');
+    }
 }

@@ -17,12 +17,9 @@ return new class extends Migration
             $table->unsignedBigInteger('company_id');
             $table->string('NIF')->unique();
             $table->integer('age');
-            $table->unsignedBigInteger('service_id');
-            $table->string('task');
             $table->timestamps();
             $table->foreign('visit_id')->references('id')->on('visits')->onDelete('cascade');
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
-            $table->foreign('service_id')->references('id')->on('services')->onDelete('cascade');
         });
     }
 

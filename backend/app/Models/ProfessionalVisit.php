@@ -8,17 +8,23 @@ class ProfessionalVisit extends Model
 {
     protected $fillable = [
         'visit_id',
+        'company_id',
         'NIF',
         'age',
-        'task'
     ];
 
-    public function visit() {
+    public function visit()
+    {
         return $this->belongsTo(Visit::class);
     }
-    
-    public function service()
+
+    public function services()
     {
-        return $this->belongsTo(Service::class);
+        return $this->hasMany(ProfessionalService::class, 'professional_id');
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 }

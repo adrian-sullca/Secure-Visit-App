@@ -35,7 +35,7 @@ class StoreEntryRequest  extends FormRequest
             // Professional company
             'CIF' => 'nullable|string|max:50',
             'company_name' => 'nullable|string|max:255',
-            'telephone' => 'nullable|string|max:20',
+            'company_telephone' => 'nullable|string|max:20',
         ];
     }
 

@@ -11,6 +11,7 @@ use App\Models\Visit;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class EntryExitController extends Controller
 {
@@ -24,51 +25,162 @@ class EntryExitController extends Controller
             return $userOrResponse;
         }
 
-        $query = EntryExit::query();
+        $query = EntryExit::with([
+            'visit.familyVisit.motive',
+            'visit.professionalVisit.company',
+            'professionalService.service',
+        ]);
 
-        // GET /entry-exits?action=entry
-        // GET /entry-exits?action=exit
-        // GET /entry-exits?date=2025-05-04
-        // GET /entry-exits?action=exit&from=2025-05-04T08:00&to=2025-05-04T14:00  
-
-        if ($request->has('action')) {
-            if ($request->action === 'entry') {
-                $query->whereNotNull('date_entry');
-            } elseif ($request->action === 'exit') {
-                $query->whereNotNull('date_exit');
-            }
-        }
+        $visitState = $request->input('visit_state', 'all');
 
         if ($request->has('visit_type')) {
-            if (in_array($request->visit_type, ['family', 'professional'])) {
-                $query->where('visit_type', $request->visit_type);
+            $query->where('visit_type', $request->visit_type);
+
+            if ($request->visit_type === 'family') {
+                $query->whereHas('visit.familyVisit', function ($q) use ($request) {
+                    if ($request->filled('student_name')) {
+                        $q->where('student_name', 'like', '%' . $request->student_name . '%');
+                    }
+                    if ($request->filled('student_surname')) {
+                        $q->where('student_surname', 'like', '%' . $request->student_surname . '%');
+                    }
+                    if ($request->filled('student_course')) {
+                        $q->where('student_course', 'like', '%' . $request->student_course . '%');
+                    }
+                    if ($request->filled('motive_id')) {
+                        $q->where('motive_id', $request->motive_id);
+                    }
+                });
             }
-        }
 
-        if ($request->has('date')) {
-            $query->whereDate('date_entry', $request->date)
-                ->orWhereDate('date_exit', $request->date);
-        }
+            if ($request->visit_type === 'professional') {
+                $query->whereHas('visit.professionalVisit', function ($q) use ($request) {
+                    if ($request->filled('professional_NIF')) {
+                        $q->where('NIF', 'like', '%' . $request->professional_NIF . '%');
+                    }
+                    if ($request->filled('professional_age')) {
+                        $q->where('age', 'like', '%' . $request->professional_age . '%');
+                    }
+                    if ($request->filled('company_name')) {
+                        $q->whereHas('company', function ($q2) use ($request) {
+                            $q2->where('name', 'like', '%' . $request->company_name . '%');
+                        });
+                    }
+                    if ($request->filled('company_telephone')) {
+                        $q->whereHas('company', function ($q2) use ($request) {
+                            $q2->where('telephone', 'like', '%' . $request->company_telephone . '%');
+                        });
+                    }
+                    if ($request->filled('company_CIF')) {
+                        $q->whereHas('company', function ($q2) use ($request) {
+                            $q2->where('CIF', 'like', '%' . $request->company_CIF . '%');
+                        });
+                    }
+                });
 
-        if ($request->has(['from', 'to'])) {
-            if ($request->action === 'exit') {
-                $query->whereBetween('date_exit', [$request->from, $request->to]);
-            } elseif ($request->action === 'entry') {
-                $query->whereBetween('date_entry', [$request->from, $request->to])
-                    ->orWhereBetween('date_exit', [$request->from, $request->to]);
-            } else {
-                $query->where(function ($q) use ($request) {
-                    $q->whereBetween('date_entry', [$request->from, $request->to])
-                        ->orWhereBetween('date_exit', [$request->from, $request->to]);
+                $query->whereHas('professionalService', function ($q) use ($request) {
+                    if ($request->filled('service_id')) {
+                        $q->where('service_id', $request->service_id);
+                    }
+                    if ($request->filled('task')) {
+                        $q->where('task', 'like', '%' . $request->task . '%');
+                    }
                 });
             }
         }
 
-        $entryExits = $query->get();
+        if ($request->filled('visit_name')) {
+            $query->whereHas('visit', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->visit_name . '%');
+            });
+        }
 
-        return response()->json([
-            'entry-exits' => $entryExits,
-        ], 200);
+        if ($request->filled('visit_surname')) {
+            $query->whereHas('visit', function ($q) use ($request) {
+                $q->where('surname', 'like', '%' . $request->visit_surname . '%');
+            });
+        }
+
+        if ($request->filled('visit_email')) {
+            $query->whereHas('visit', function ($q) use ($request) {
+                $q->where('email', 'like', '%' . $request->visit_email . '%');
+            });
+        }
+        // TODO: CAMBIAR A SWITCH
+        $date_entry = $request->input('date_entry');
+        $date_exit  = $request->input('date_exit');
+        $time_entry = $request->input('time_entry');
+        $time_exit  = $request->input('time_exit');
+
+        if ($date_entry && !$date_exit && !$time_entry && !$time_exit) {
+            $query->whereDate('date_entry', '>=', $date_entry);
+        }
+
+        elseif (!$date_entry && $date_exit && !$time_entry && !$time_exit) {
+            $query->whereDate('date_exit', '<=', $date_exit);
+        }
+
+        elseif ($date_entry && $date_exit && !$time_entry && !$time_exit) {
+            $query->whereBetween('date_entry', [
+                $date_entry . ' 00:00:00',
+                $date_exit . ' 23:59:59'
+            ]);
+        }
+
+        elseif ($date_entry && $date_exit && $time_entry && $time_exit) {
+            $query->whereBetween('date_entry', [
+                $date_entry . ' 00:00:00',
+                $date_exit . ' 23:59:59'
+            ])
+                ->whereTime('date_entry', '>=', $time_entry)
+                ->whereTime('date_exit', '<=', $time_exit);
+        }
+
+        elseif ($date_entry && $date_exit && $time_entry && !$time_exit) {
+            $query->whereBetween('date_entry', [
+                $date_entry . ' 00:00:00',
+                $date_exit . ' 23:59:59'
+            ])->whereTime('date_entry', '>=', $time_entry);
+        }
+
+        elseif ($date_entry && $date_exit && !$time_entry && $time_exit) {
+            $query->whereBetween('date_entry', [
+                $date_entry . ' 00:00:00',
+                $date_exit . ' 23:59:59'
+            ])->whereTime('date_exit', '<=', $time_exit);
+        }
+
+        elseif (!$date_entry && !$date_exit && $time_entry && !$time_exit) {
+            $query->whereTime('date_entry', '>=', $time_entry);
+        }
+
+        elseif (!$date_entry && !$date_exit && !$time_entry && $time_exit) {
+            $query->whereTime('date_exit', '<=', $time_exit);
+        }
+
+        elseif ($date_entry && !$date_exit && $time_entry && !$time_exit) {
+            $start = $date_entry . ' ' . $time_entry;
+            $query->where('date_entry', '>=', $start);
+        }
+
+        elseif ($date_entry && !$date_exit && !$time_entry && $time_exit) {
+            $end = $date_entry . ' ' . $time_exit;
+            $query->where('date_entry', '>=', $date_entry)
+                ->where('date_exit', '<=', $end);
+        }
+
+        if ($visitState === 'active') {
+            $query->whereNull('date_exit');
+        } elseif ($visitState === 'finished') {
+            $query->whereNotNull('date_exit');
+        }
+
+        $query->orderBy('date_entry', 'desc'); // Ordena por fecha de entrada de la mas nueva a la mas antigua
+
+        $perPage = $request->input('per_page', 10);
+        $entryExits = $query->paginate($perPage);
+
+        return response()->json($entryExits, 200);
     }
 
     /**
@@ -76,7 +188,7 @@ class EntryExitController extends Controller
      */
     public function storeEntry(StoreEntryRequest $request)
     {
-        // AÑADIR: MANEJAR ENVIO DE MAIL
+        // TODO: MANEJAR ENVIO DE MAIL
         $userOrResponse = $this->authenticateUser($request);
 
         if ($userOrResponse instanceof JsonResponse) {
@@ -89,11 +201,13 @@ class EntryExitController extends Controller
         DB::beginTransaction();
 
         try {
-            $visit = new Visit();
-            $visit->name = $validatedData['name'];
-            $visit->surname = $validatedData['surname'];
-            $visit->email = $validatedData['email'];
-            $visit->save();
+            $visit = Visit::firstOrCreate(
+                ['email' => $validatedData['email']],
+                [
+                    'name' => $validatedData['name'],
+                    'surname' => $validatedData['surname'],
+                ]
+            );
 
             $entry = new EntryExit();
             $entry->user_id = $user->id;
@@ -117,10 +231,20 @@ class EntryExitController extends Controller
                     ['CIF' => $validatedData['CIF']],
                     [
                         'name' => $validatedData['company_name'],
-                        'telephone' => $validatedData['telephone'],
+                        'telephone' => $validatedData['company_telephone'],
                     ]
                 );
-                $professionalVisit = new ProfessionalVisit();
+
+                $professionalVisit = ProfessionalVisit::firstOrCreate(
+                    ['NIF' => $validatedData['NIF']],
+                    [
+                        'visit_id' => $visit->id,
+                        'age' => $validatedData['age'],
+                        'task' => $validatedData['task'],
+                        'service_id' => $validatedData['service_id'],
+                        'company_id' => $company->id,
+                    ]
+                );
                 $professionalVisit->visit_id = $visit->id;
                 $professionalVisit->NIF = $validatedData['NIF'];
                 $professionalVisit->age = $validatedData['age'];
