@@ -7,7 +7,7 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
 
-class StoreServiceRequest extends FormRequest
+class UpdateUserRequest extends FormRequest
 {
     public function rules(): array
     {
@@ -16,8 +16,16 @@ class StoreServiceRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('services', 'name'),
             ],
+            'email' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($this->route('user'), 'id'),
+            ],
+            'password' => ['nullable', 'string'],
+            'admin' => 'required|boolean',
+            'enabled' => 'required|boolean',
         ];
     }
 

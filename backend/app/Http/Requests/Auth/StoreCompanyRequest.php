@@ -6,18 +6,21 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules;
 
-class StoreServiceRequest extends FormRequest
+class StoreCompanyRequest extends FormRequest
 {
     public function rules(): array
     {
         return [
-            'name' => [
+            'CIF' => [
                 'required',
                 'string',
-                'max:255',
-                Rule::unique('services', 'name'),
+                'max:10',
+                Rule::unique('companies', 'CIF'),
             ],
+            'name' => 'required|string|max:255',
+            'telephone' => 'required|string|max:255',
         ];
     }
 

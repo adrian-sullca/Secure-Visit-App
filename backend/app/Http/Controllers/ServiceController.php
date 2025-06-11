@@ -46,15 +46,13 @@ class ServiceController extends Controller
         }
 
         $validatedData = $request->validated();
-        $validatedData['enabled'] = $request->has('enabled') ? (bool)$request->input('enabled') : false;
         $service = new Service($validatedData);
 
         $service->save();
 
         return response()->json([
             'message' => 'Service stored',
-            'service' => $service,
-        ], 201);
+        ], 200);
     }
 
     /**
@@ -112,6 +110,22 @@ class ServiceController extends Controller
 
         $service = Service::findOrFail($id);
         $service->enabled = false;
+
+        $service->save();
+
+        return response()->json([], 204);
+    }
+
+    public function enable(Request $request, string $id)
+    {
+        $adminOrResponse = $this->authenticateAdmin($request);
+
+        if ($adminOrResponse instanceof JsonResponse) {
+            return $adminOrResponse;
+        }
+
+        $service = Service::findOrFail($id);
+        $service->enabled = true;
 
         $service->save();
 

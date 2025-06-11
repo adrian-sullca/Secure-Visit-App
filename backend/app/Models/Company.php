@@ -9,7 +9,8 @@ class Company extends Model
     protected $fillable = [
         'CIF',
         'name',
-        'telephone'
+        'telephone',
+        'enabled'
     ];
 
     public function professionals()

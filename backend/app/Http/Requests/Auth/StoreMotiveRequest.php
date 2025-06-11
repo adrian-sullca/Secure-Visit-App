@@ -18,7 +18,6 @@ class StoreMotiveRequest extends FormRequest
                 'max:255',
                 Rule::unique('motives', 'name'),
             ],
-            'enabled' => 'nullable|boolean',
         ];
     }
 

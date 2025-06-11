@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('CIF')->unique();
             $table->string('name');
             $table->string('telephone')->unique();
+            $table->boolean('enabled')->default(true);
             $table->timestamps();
         });
     }

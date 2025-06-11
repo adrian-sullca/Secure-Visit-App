@@ -6,18 +6,22 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules;
 
-class StoreServiceRequest extends FormRequest
+class StoreUserRequest extends FormRequest
 {
     public function rules(): array
     {
         return [
-            'name' => [
+            'name' => 'required|string|max:255',
+            'email' => [
                 'required',
-                'string',
+                'email',
                 'max:255',
-                Rule::unique('services', 'name'),
+                Rule::unique('users', 'email'),
             ],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'admin' => 'required|boolean',
         ];
     }
 

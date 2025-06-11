@@ -46,15 +46,13 @@ class MotiveController extends Controller
         }
 
         $validatedData = $request->validated();
-        $validatedData['enabled'] = $request->has('enabled') ? (bool)$request->input('enabled') : false;
         $motive = new Motive($validatedData);
 
         $motive->save();
 
         return response()->json([
             'message' => 'Motive stored',
-            'motive' => $motive,
-        ], 201);
+        ], 200);
     }
 
     /**
@@ -112,6 +110,22 @@ class MotiveController extends Controller
 
         $motive = Motive::findOrFail($id);
         $motive->enabled = false;
+
+        $motive->save();
+
+        return response()->json([], 204);
+    }
+
+    public function enable(Request $request, string $id)
+    {
+        $adminOrResponse = $this->authenticateAdmin($request);
+
+        if ($adminOrResponse instanceof JsonResponse) {
+            return $adminOrResponse;
+        }
+
+        $motive = Motive::findOrFail($id);
+        $motive->enabled = true;
 
         $motive->save();
 

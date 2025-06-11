@@ -7,17 +7,29 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
 
-class StoreServiceRequest extends FormRequest
+class UpdateCompanyRequest extends FormRequest
 {
     public function rules(): array
     {
         return [
+            'CIF' => [
+                'required',
+                'string',
+                'max:10',
+                Rule::unique('companies', 'CIF')->ignore($this->route('company'), 'id'),
+            ],
             'name' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('services', 'name'),
             ],
+            'telephone' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('companies', 'telephone')->ignore($this->route('company'), 'id'),
+            ],
+            'enabled' => 'required|boolean',
         ];
     }
 
