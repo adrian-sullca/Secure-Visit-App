@@ -12,13 +12,17 @@ class CompanyController extends Controller
 {
     public function index(Request $request)
     {
-        $adminOrResponse = $this->authenticateAdmin($request);
+        $userOrResponse = $this->authenticateUser($request);
 
-        if ($adminOrResponse instanceof JsonResponse) {
-            return $adminOrResponse;
+        if ($userOrResponse instanceof JsonResponse) {
+            return $userOrResponse;
         }
 
-        $companies = Company::all();
+        if ($userOrResponse['admin'] == true) {
+            $companies = Company::all();
+        } else {
+            $companies = Company::where('enabled', true)->get();
+        }
 
         return response()->json([
             'companies' => $companies

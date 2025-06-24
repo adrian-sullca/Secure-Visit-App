@@ -27,7 +27,6 @@ class MotiveController extends Controller
             $motives = Motive::where('enabled', true)->get();
         }
 
-
         return response()->json([
             'motives' => $motives
         ], 200);

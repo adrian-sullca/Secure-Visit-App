@@ -15,10 +15,6 @@ class EntryExit extends Model
         'date_exit'
     ];
 
-    protected $casts = [
-        'visit_type' => VisitType::class,
-    ];
-
     public function visit()
     {
         return $this->belongsTo(Visit::class);

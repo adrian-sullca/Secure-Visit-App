@@ -98,7 +98,15 @@ class DatabaseSeeder extends Seeder
             'surname' => 'Martínez',
             'email' => 'laura.martinez1@example.com',
         ]);
+        $entry1 = EntryExit::create([
+            'user_id' => 1,
+            'visit_id' => $visit1->id,
+            'visit_type' => 'family',
+            'date_entry' => $day1->copy()->setTime(8, 10),
+            'date_exit' => $day1->copy()->setTime(9, 0),
+        ]);
         FamilyVisit::create([
+            'entry_exit_id' => $entry1->id,
             'visit_id' => $visit1->id,
             'student_name' => 'Carlos',
             'student_surname' => 'Martínez',
@@ -106,28 +114,13 @@ class DatabaseSeeder extends Seeder
             'motive_id' => 1,
             'custom_motive' => 'Consulta con el tutor',
         ]);
-        EntryExit::create([
-            'user_id' => 1,
-            'visit_id' => $visit1->id,
-            'visit_type' => 'family',
-            'date_entry' => $day1->copy()->setTime(8, 10),
-            'date_exit' => $day1->copy()->setTime(9, 0),
-        ]);
 
         $visit2 = Visit::create([
             'name' => 'Jorge',
             'surname' => 'López',
             'email' => 'jorge.lopez1@example.com',
         ]);
-        FamilyVisit::create([
-            'visit_id' => $visit2->id,
-            'student_name' => 'Lucía',
-            'student_surname' => 'López',
-            'student_course' => '1 Bachillerato',
-            'motive_id' => 3,
-            'custom_motive' => null,
-        ]);
-        EntryExit::create([
+        $entry2 = EntryExit::create([
             'user_id' => 1,
             'visit_id' => $visit2->id,
             'visit_type' => 'family',
@@ -135,25 +128,36 @@ class DatabaseSeeder extends Seeder
             'date_exit' => $day1->copy()->setTime(10, 20),
         ]);
 
+        FamilyVisit::create([
+            'entry_exit_id' => $entry2->id,
+            'visit_id' => $visit2->id,
+            'student_name' => 'Lucía',
+            'student_surname' => 'López',
+            'student_course' => '1 Bachillerato',
+            'motive_id' => 3,
+            'custom_motive' => null,
+        ]);
+
         $visit3 = Visit::create([
             'name' => 'María',
             'surname' => 'Sánchez',
             'email' => 'maria.sanchez1@example.com',
         ]);
+        $entry3 = EntryExit::create([
+            'user_id' => 1,
+            'visit_id' => $visit3->id,
+            'visit_type' => 'family',
+            'date_entry' => $day1->copy()->setTime(11, 0),
+            'date_exit' => $day1->copy()->setTime(12, 0),
+        ]);
         FamilyVisit::create([
+            'entry_exit_id' => $entry3->id,
             'visit_id' => $visit3->id,
             'student_name' => 'Diego',
             'student_surname' => 'Sánchez',
             'student_course' => '2 ESO',
             'motive_id' => 2,
             'custom_motive' => null,
-        ]);
-        EntryExit::create([
-            'user_id' => 1,
-            'visit_id' => $visit3->id,
-            'visit_type' => 'family',
-            'date_entry' => $day1->copy()->setTime(11, 0),
-            'date_exit' => $day1->copy()->setTime(12, 0),
         ]);
 
         $company1 = Company::create([
@@ -261,7 +265,15 @@ class DatabaseSeeder extends Seeder
             'surname' => 'Gómez',
             'email' => 'pedro.gomez2@example.com',
         ]);
+        $entry4 = EntryExit::create([
+            'user_id' => 1,
+            'visit_id' => $visit7->id,
+            'visit_type' => 'family',
+            'date_entry' => $day2->copy()->setTime(8, 30),
+            'date_exit' => $day2->copy()->setTime(9, 30),
+        ]);
         FamilyVisit::create([
+            'entry_exit_id' => $entry4->id,
             'visit_id' => $visit7->id,
             'student_name' => 'Andrea',
             'student_surname' => 'Gómez',
@@ -269,20 +281,21 @@ class DatabaseSeeder extends Seeder
             'motive_id' => 1,
             'custom_motive' => 'Entrega documentación',
         ]);
-        EntryExit::create([
-            'user_id' => 1,
-            'visit_id' => $visit7->id,
-            'visit_type' => 'family',
-            'date_entry' => $day2->copy()->setTime(8, 30),
-            'date_exit' => $day2->copy()->setTime(9, 30),
-        ]);
 
         $visit8 = Visit::create([
             'name' => 'Carmen',
             'surname' => 'Molina',
             'email' => 'carmen.molina2@example.com',
         ]);
+        $entry5 = EntryExit::create([
+            'user_id' => 1,
+            'visit_id' => $visit8->id,
+            'visit_type' => 'family',
+            'date_entry' => $day2->copy()->setTime(9, 40),
+            'date_exit' => $day2->copy()->setTime(10, 20),
+        ]);
         FamilyVisit::create([
+            'entry_exit_id' => $entry5->id,
             'visit_id' => $visit8->id,
             'student_name' => 'Mario',
             'student_surname' => 'Molina',
@@ -290,33 +303,27 @@ class DatabaseSeeder extends Seeder
             'motive_id' => 2,
             'custom_motive' => null,
         ]);
-        EntryExit::create([
-            'user_id' => 1,
-            'visit_id' => $visit8->id,
-            'visit_type' => 'family',
-            'date_entry' => $day2->copy()->setTime(9, 40),
-            'date_exit' => $day2->copy()->setTime(10, 20),
-        ]);
 
         $visit9 = Visit::create([
             'name' => 'Javier',
             'surname' => 'Ortiz',
             'email' => 'javier.ortiz2@example.com',
         ]);
+        $entry6 = EntryExit::create([
+            'user_id' => 1,
+            'visit_id' => $visit9->id,
+            'visit_type' => 'family',
+            'date_entry' => $day2->copy()->setTime(10, 30),
+            'date_exit' => $day2->copy()->setTime(11, 15),
+        ]);
         FamilyVisit::create([
+            'entry_exit_id' => $entry6->id,
             'visit_id' => $visit9->id,
             'student_name' => 'Elena',
             'student_surname' => 'Ortiz',
             'student_course' => '3 ESO',
             'motive_id' => 1,
             'custom_motive' => 'Recoger justificante',
-        ]);
-        EntryExit::create([
-            'user_id' => 1,
-            'visit_id' => $visit9->id,
-            'visit_type' => 'family',
-            'date_entry' => $day2->copy()->setTime(10, 30),
-            'date_exit' => $day2->copy()->setTime(11, 15),
         ]);
 
         $company4 = Company::create([
@@ -421,7 +428,15 @@ class DatabaseSeeder extends Seeder
             'surname' => 'Vega',
             'email' => 'fernando.vega3@example.com',
         ]);
+        $entry7 = EntryExit::create([
+            'user_id' => 1,
+            'visit_id' => $visit13->id,
+            'visit_type' => 'family',
+            'date_entry' => $day3->copy()->setTime(8, 20),
+            'date_exit' => $day3->copy()->setTime(9, 10),
+        ]);
         FamilyVisit::create([
+            'entry_exit_id' => $entry7->id,
             'visit_id' => $visit13->id,
             'student_name' => 'Paula',
             'student_surname' => 'Vega',
@@ -429,20 +444,21 @@ class DatabaseSeeder extends Seeder
             'motive_id' => 1,
             'custom_motive' => 'Consulta médica',
         ]);
-        EntryExit::create([
-            'user_id' => 1,
-            'visit_id' => $visit13->id,
-            'visit_type' => 'family',
-            'date_entry' => $day3->copy()->setTime(8, 20),
-            'date_exit' => $day3->copy()->setTime(9, 10),
-        ]);
 
         $visit14 = Visit::create([
             'name' => 'Silvia',
             'surname' => 'Herrera',
             'email' => 'silvia.herrera3@example.com',
         ]);
+        $entry8 = EntryExit::create([
+            'user_id' => 1,
+            'visit_id' => $visit14->id,
+            'visit_type' => 'family',
+            'date_entry' => $day3->copy()->setTime(9, 40),
+            'date_exit' => $day3->copy()->setTime(10, 30),
+        ]);
         FamilyVisit::create([
+            'entry_exit_id' => $entry8->id,
             'visit_id' => $visit14->id,
             'student_name' => 'Alberto',
             'student_surname' => 'Herrera',
@@ -450,33 +466,27 @@ class DatabaseSeeder extends Seeder
             'motive_id' => 2,
             'custom_motive' => null,
         ]);
-        EntryExit::create([
-            'user_id' => 1,
-            'visit_id' => $visit14->id,
-            'visit_type' => 'family',
-            'date_entry' => $day3->copy()->setTime(9, 40),
-            'date_exit' => $day3->copy()->setTime(10, 30),
-        ]);
 
         $visit15 = Visit::create([
             'name' => 'Manuel',
             'surname' => 'Pérez',
             'email' => 'manuel.perez3@example.com',
         ]);
+        $entry9 = EntryExit::create([
+            'user_id' => 1,
+            'visit_id' => $visit15->id,
+            'visit_type' => 'family',
+            'date_entry' => $day3->copy()->setTime(11, 20),
+            'date_exit' => $day3->copy()->setTime(12, 10),
+        ]);
         FamilyVisit::create([
+            'entry_exit_id' => $entry9->id,
             'visit_id' => $visit15->id,
             'student_name' => 'Clara',
             'student_surname' => 'Pérez',
             'student_course' => '1 ESO',
             'motive_id' => 3,
             'custom_motive' => null,
-        ]);
-        EntryExit::create([
-            'user_id' => 1,
-            'visit_id' => $visit15->id,
-            'visit_type' => 'family',
-            'date_entry' => $day3->copy()->setTime(11, 20),
-            'date_exit' => $day3->copy()->setTime(12, 10),
         ]);
 
         $company7 = Company::create([

@@ -3,15 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Auth\StoreEntryRequest;
+use App\Http\Requests\Auth\UpdateEntryRequest;
+use App\Http\Requests\Auth\UpdateFamilyVisitRequest;
+use App\Mail\ProfessionalVisitExitMail;
 use App\Models\Company;
 use App\Models\EntryExit;
 use App\Models\FamilyVisit;
+use App\Models\ProfessionalService;
 use App\Models\ProfessionalVisit;
 use App\Models\Visit;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class EntryExitController extends Controller
 {
@@ -106,7 +111,7 @@ class EntryExitController extends Controller
                 $q->where('email', 'like', '%' . $request->visit_email . '%');
             });
         }
-        // TODO: CAMBIAR A SWITCH
+
         $date_entry = $request->input('date_entry');
         $date_exit  = $request->input('date_exit');
         $time_entry = $request->input('time_entry');
@@ -114,56 +119,38 @@ class EntryExitController extends Controller
 
         if ($date_entry && !$date_exit && !$time_entry && !$time_exit) {
             $query->whereDate('date_entry', '>=', $date_entry);
-        }
-
-        elseif (!$date_entry && $date_exit && !$time_entry && !$time_exit) {
+        } elseif (!$date_entry && $date_exit && !$time_entry && !$time_exit) {
             $query->whereDate('date_exit', '<=', $date_exit);
-        }
-
-        elseif ($date_entry && $date_exit && !$time_entry && !$time_exit) {
+        } elseif ($date_entry && $date_exit && !$time_entry && !$time_exit) {
             $query->whereBetween('date_entry', [
                 $date_entry . ' 00:00:00',
                 $date_exit . ' 23:59:59'
             ]);
-        }
-
-        elseif ($date_entry && $date_exit && $time_entry && $time_exit) {
+        } elseif ($date_entry && $date_exit && $time_entry && $time_exit) {
             $query->whereBetween('date_entry', [
                 $date_entry . ' 00:00:00',
                 $date_exit . ' 23:59:59'
             ])
                 ->whereTime('date_entry', '>=', $time_entry)
                 ->whereTime('date_exit', '<=', $time_exit);
-        }
-
-        elseif ($date_entry && $date_exit && $time_entry && !$time_exit) {
+        } elseif ($date_entry && $date_exit && $time_entry && !$time_exit) {
             $query->whereBetween('date_entry', [
                 $date_entry . ' 00:00:00',
                 $date_exit . ' 23:59:59'
             ])->whereTime('date_entry', '>=', $time_entry);
-        }
-
-        elseif ($date_entry && $date_exit && !$time_entry && $time_exit) {
+        } elseif ($date_entry && $date_exit && !$time_entry && $time_exit) {
             $query->whereBetween('date_entry', [
                 $date_entry . ' 00:00:00',
                 $date_exit . ' 23:59:59'
             ])->whereTime('date_exit', '<=', $time_exit);
-        }
-
-        elseif (!$date_entry && !$date_exit && $time_entry && !$time_exit) {
+        } elseif (!$date_entry && !$date_exit && $time_entry && !$time_exit) {
             $query->whereTime('date_entry', '>=', $time_entry);
-        }
-
-        elseif (!$date_entry && !$date_exit && !$time_entry && $time_exit) {
+        } elseif (!$date_entry && !$date_exit && !$time_entry && $time_exit) {
             $query->whereTime('date_exit', '<=', $time_exit);
-        }
-
-        elseif ($date_entry && !$date_exit && $time_entry && !$time_exit) {
+        } elseif ($date_entry && !$date_exit && $time_entry && !$time_exit) {
             $start = $date_entry . ' ' . $time_entry;
             $query->where('date_entry', '>=', $start);
-        }
-
-        elseif ($date_entry && !$date_exit && !$time_entry && $time_exit) {
+        } elseif ($date_entry && !$date_exit && !$time_entry && $time_exit) {
             $end = $date_entry . ' ' . $time_exit;
             $query->where('date_entry', '>=', $date_entry)
                 ->where('date_exit', '<=', $end);
@@ -175,7 +162,7 @@ class EntryExitController extends Controller
             $query->whereNotNull('date_exit');
         }
 
-        $query->orderBy('date_entry', 'desc'); // Ordena por fecha de entrada de la mas nueva a la mas antigua
+        $query->orderBy('date_entry', 'desc');
 
         $perPage = $request->input('per_page', 10);
         $entryExits = $query->paginate($perPage);
@@ -188,7 +175,6 @@ class EntryExitController extends Controller
      */
     public function storeEntry(StoreEntryRequest $request)
     {
-        // TODO: MANEJAR ENVIO DE MAIL
         $userOrResponse = $this->authenticateUser($request);
 
         if ($userOrResponse instanceof JsonResponse) {
@@ -201,7 +187,7 @@ class EntryExitController extends Controller
         DB::beginTransaction();
 
         try {
-            $visit = Visit::firstOrCreate(
+            $visit = Visit::updateOrCreate(
                 ['email' => $validatedData['email']],
                 [
                     'name' => $validatedData['name'],
@@ -209,25 +195,31 @@ class EntryExitController extends Controller
                 ]
             );
 
-            $entry = new EntryExit();
-            $entry->user_id = $user->id;
-            $entry->visit_id = $visit->id;
-            $entry->visit_type = $validatedData['visit_type'];
-            $entry->date_entry = now();
-            $entry->date_exit = null;
-            $entry->save();
-
-            if ($validatedData['visit_type'] === 'family') {
-                $familyVisit = new FamilyVisit();
-                $familyVisit->visit_id = $visit->id;
-                $familyVisit->student_name = $validatedData['student_name'];
-                $familyVisit->student_surname = $validatedData['student_surname'];
-                $familyVisit->student_course = $validatedData['student_course'];
-                $familyVisit->motive_id = $validatedData['motive_id'];
-                $familyVisit->custom_motive = $validatedData['custom_motive'] ?? null;
-                $familyVisit->save();
-            } elseif ($validatedData['visit_type'] === 'professional') {
-                $company = Company::firstOrCreate(
+            $entry = EntryExit::create(
+                [
+                    'user_id' => $user->id,
+                    'visit_id' => $visit->id,
+                    'visit_type' => $validatedData['visit_type'],
+                    'date_entry' => now(),
+                    'date_exit' => null,
+                ]
+            );
+            // "Failed to store entry: SQLSTATE[HY000]: General error: 1364 Field 'entry_exit_id' doesn't have a default value (Connection: mysql, SQL: insert into `family_visits` (`visit_id`, `student_name`, `student_surname`, `student_course`, `motive_id`, `custom_motive`, `updated_at`, `created_at`) values (1, asd, dasd, 3 ESO, 1, asdasdasd, 2025-06-22 21:01:25, 2025-06-22 21:01:25))"
+            //   }
+            if ($validatedData['visit_type'] == 'family') {
+                FamilyVisit::create(
+                    [
+                        'entry_exit_id' => $entry->id,
+                        'visit_id' => $visit->id,
+                        'student_name' => $validatedData['student_name'],
+                        'student_surname' => $validatedData['student_surname'],
+                        'student_course' => $validatedData['student_course'],
+                        'motive_id' => $validatedData['motive_id'],
+                        'custom_motive' => $validatedData['custom_motive'],
+                    ]
+                );
+            } elseif ($validatedData['visit_type'] == 'professional') {
+                $company = Company::updateOrCreate(
                     ['CIF' => $validatedData['CIF']],
                     [
                         'name' => $validatedData['company_name'],
@@ -235,23 +227,23 @@ class EntryExitController extends Controller
                     ]
                 );
 
-                $professionalVisit = ProfessionalVisit::firstOrCreate(
+                $professionalVisit = ProfessionalVisit::updateOrCreate(
                     ['NIF' => $validatedData['NIF']],
                     [
                         'visit_id' => $visit->id,
                         'age' => $validatedData['age'],
-                        'task' => $validatedData['task'],
-                        'service_id' => $validatedData['service_id'],
                         'company_id' => $company->id,
                     ]
                 );
-                $professionalVisit->visit_id = $visit->id;
-                $professionalVisit->NIF = $validatedData['NIF'];
-                $professionalVisit->age = $validatedData['age'];
-                $professionalVisit->task = $validatedData['task'];
-                $professionalVisit->service_id = $validatedData['service_id'];
-                $professionalVisit->company_id = $company->id;
-                $professionalVisit->save();
+
+                ProfessionalService::create(
+                    [
+                        'entry_exit_id' => $entry->id,
+                        'professional_id' => $professionalVisit->id,
+                        'task' => $validatedData['task'],
+                        'service_id' => $validatedData['service_id'],
+                    ]
+                );
             }
 
             DB::commit();
@@ -277,16 +269,64 @@ class EntryExitController extends Controller
         if ($userOrResponse instanceof JsonResponse) {
             return $userOrResponse;
         }
+        try {
+            $entryExit = EntryExit::findOrFail($id);
+            $entryExit->date_exit = now();
 
-        $entryExit = EntryExit::findOrFail($id);
-        $entryExit->date_exit = now();
+            if ($entryExit->visit_type == 'professional') {
+                $visit = $entryExit->visit;
+                $professional = $visit->professionalVisit;
+                $company = $professional->company;
 
-        $entryExit->save();
+                $pdf1 = Pdf::loadView('pdf.annex_a', [
+                    'visit' => $visit,
+                    'entry' => $entryExit,
+                    'professional' => $professional,
+                    'company' => $company,
+                ]);
 
-        return response()->json([
-            'message' => 'Exit store successfully',
-            'entry-exit' => $entryExit
-        ], 200);
+                $pdf2 = Pdf::loadView('pdf.annex_b', [
+                    'visit' => $visit,
+                    'professional' => $professional,
+                ]);
+
+                $pdf3 = Pdf::loadView('pdf.annex_c', [
+                    'visit' => $visit,
+                    'professional' => $professional,
+                ]);
+
+                $pdf4 = Pdf::loadView('pdf.annex_d', [
+                    'visit' => $visit,
+                    'professional' => $professional,
+                    'company' => $company,
+                ]);
+
+                $pdf5 = Pdf::loadView('pdf.annex_e', [
+                    'visit' => $visit,
+                    'professional' => $professional,
+                    'company' => $company,
+                ]);
+
+                Mail::to($visit->email)->send(new ProfessionalVisitExitMail([
+                    'annex_a.pdf' => $pdf1->output(),
+                    'annex_b.pdf' => $pdf2->output(),
+                    'annex_c.pdf' => $pdf3->output(),
+                    'annex_d.pdf' => $pdf4->output(),
+                    'annex_e.pdf' => $pdf5->output()
+                ], $visit->name));
+            }
+
+            $entryExit->save();
+
+            return response()->json([
+                'message' => 'Exit stored successfully',
+                'entry-exit' => $entryExit
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al almacenar la salida o enviar el correo: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -310,9 +350,136 @@ class EntryExitController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function updateEntry(UpdateEntryRequest $request, string $id)
     {
-        //
+        $userOrResponse = $this->authenticateUser($request);
+
+        if ($userOrResponse instanceof JsonResponse) {
+            return $userOrResponse;
+        }
+
+        $validated = $request->validated();
+        DB::beginTransaction();
+
+        try {
+            $entry = EntryExit::findOrFail($id);
+
+            $entry->date_entry = $validated['date_entry'];
+
+            $entry->date_exit = $validated['date_exit'] ?? null;
+
+            $entryNewVisitType = $validated['visit_type'];
+
+            $visit = Visit::where('email', $validated['email'])->first();
+
+            if (!$visit) {
+                $visit = Visit::create([
+                    'email' => $validated['email'],
+                    'name' => $validated['name'],
+                    'surname' => $validated['surname']
+                ]);
+            } else {
+                $visit->update([
+                    'name' => $validated['name'],
+                    'surname' => $validated['surname']
+                ]);
+            }
+            $entry->visit_id = $visit->id;
+            $entry->visit_type = $entryNewVisitType;
+
+            if ($entry->visit_type != $entryNewVisitType) {
+                if ($entryNewVisitType == "professional") {
+                    FamilyVisit::destroy($validated['family_visit_id']);
+
+                    $company = Company::updateOrCreate(
+                        ['CIF' => $validated['CIF']],
+                        [
+                            'name' => $validated['company_name'],
+                            'telephone' => $validated['company_telephone'],
+                        ]
+                    );
+
+                    $professionalVisit = ProfessionalVisit::updateOrCreate(
+                        ['NIF' => $validated['NIF']],
+                        [
+                            'visit_id' => $visit->id,
+                            'age' => $validated['age'],
+                            'company_id' => $company->id,
+                        ]
+                    );
+
+                    ProfessionalService::create([
+                        'entry_exit_id' => $entry->id,
+                        'professional_id' => $professionalVisit->id,
+                        'service_id' => $validated['service_id'],
+                        'task' => $validated['task'],
+                    ]);
+                } else {
+                    ProfessionalService::where('entry_exit_id', $entry->id)->delete();
+
+                    FamilyVisit::create(
+                        [
+                            'visit_id' => $visit->id,
+                            'student_name' => $validated['student_name'],
+                            'student_surname' => $validated['student_surname'],
+                            'student_course' => $validated['student_course'],
+                            'motive_id' => $validated['motive_id'],
+                            'custom_motive' => $validated['custom_motive'],
+                        ]
+                    );
+                }
+            }
+
+            if ($entry->visit_type == $entryNewVisitType) {
+                if ($entryNewVisitType == "family") {
+                    FamilyVisit::where('id', $validated['family_visit_id'])->update([
+                        'visit_id' => $visit->id,
+                        'student_name' => $validated['student_name'],
+                        'student_surname' => $validated['student_surname'],
+                        'student_course' => $validated['student_course'],
+                        'motive_id' => $validated['motive_id'],
+                        'custom_motive' => $validated['custom_motive'],
+                    ]);
+                } else {
+                    $company = Company::updateOrCreate(
+                        ['CIF' => $validated['CIF']],
+                        [
+                            'name' => $validated['company_name'],
+                            'telephone' => $validated['company_telephone'],
+                        ]
+                    );
+
+                    $professionalVisit = ProfessionalVisit::updateOrCreate(
+                        ['NIF' => $validated['NIF']],
+                        [
+                            'visit_id' => $visit->id,
+                            'age' => $validated['age'],
+                            'company_id' => $company->id,
+                        ]
+                    );
+
+                    ProfessionalService::where('entry_exit_id', $entry->id)->update([
+                        'professional_id' => $professionalVisit->id,
+                        'service_id' => $validated['service_id'],
+                        'task' => $validated['task'],
+                    ]);
+                }
+            }
+
+            $entry->save();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Visit updated successfully',
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Failed to update visit: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -326,27 +493,12 @@ class EntryExitController extends Controller
             return $userOrResponse;
         }
 
-        DB::beginTransaction();
-
         try {
             $entryExit = EntryExit::findOrFail($id);
-
-            if ($entryExit->visit_type === 'family' && $entryExit->visit->familyVisit) {
-                $entryExit->visit->familyVisit->delete();
-            }
-
-            if ($entryExit->visit_type === 'professional' && $entryExit->visit->professionalVisit) {
-                $entryExit->visit->professionalVisit->delete();
-            }
-
-            $entryExit->visit->delete();
             $entryExit->delete();
 
-            DB::commit();
-
-            return response()->json([], 204);
+            return response()->json(['message' => 'Entry successfully deleted '], 204);
         } catch (\Exception $e) {
-            DB::rollBack();
             return response()->json(['message' => 'Error to deleting entry: ' . $e->getMessage(),], 500);
         }
     }

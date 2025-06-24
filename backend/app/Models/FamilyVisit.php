@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class FamilyVisit extends Model
 {
     protected $fillable = [
+        'entry_exit_id',
         'visit_id',
         'student_name',
         'student_surname',
@@ -15,10 +16,11 @@ class FamilyVisit extends Model
         'custom_motive'
     ];
 
-    public function visit() {
+    public function visit()
+    {
         return $this->belongsTo(Visit::class);
     }
-    
+
 
     public function motive()
     {

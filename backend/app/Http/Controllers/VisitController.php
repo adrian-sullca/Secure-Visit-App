@@ -2,31 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\FamilyVisit;
 use App\Models\Visit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class VisitController extends Controller
 {
-    public function update(Request $request, string $id)
+    public function index(Request $request)
     {
-        $adminOrResponse = $this->authenticateAdmin($request);
-
-        if ($adminOrResponse instanceof JsonResponse) {
-            return $adminOrResponse;
-        }
-
-        $visit = Visit::findOrFail($id);
-        
-        $validatedData = $request->validated();
-        $service->enabled = (bool) $validatedData['enabled'];
-
-        $service->update($validatedData);
+        $visitors = Visit::with(['professionalVisit.company', 'familyVisit'])
+            ->get()
+            ->map(function ($visit) {
+                if ($visit->professionalVisit) {
+                    $visit->visit_type = 'professional';
+                } else {
+                    $visit->visit_type = 'family';
+                }
+                return $visit;
+            });
 
         return response()->json([
-            'message' => 'Service updated successfully',
-            'service' => $service
+            'visitors' => $visitors
         ], 200);
     }
 }

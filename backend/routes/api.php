@@ -6,6 +6,7 @@ use App\Http\Controllers\EntryExitController;
 use App\Http\Controllers\MotiveController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VisitController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -39,6 +40,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // EntryExits
     Route::get('/entry-exits', [EntryExitController::class, 'index']);
     Route::post('/entry', [EntryExitController::class, 'storeEntry']);
+    Route::patch('/entry/{entry}', [EntryExitController::class, 'updateEntry']);
     Route::post('/exit/{entry}', [EntryExitController::class, 'storeExit']);
     Route::delete('/entry/{entry}', [EntryExitController::class, 'destroy']);
     Route::get('/entry/{entry}', [EntryExitController::class, 'show']);
@@ -50,4 +52,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/company/{company}', [CompanyController::class, 'update']);
     Route::delete('/company/{company}', [CompanyController::class, 'destroy']);
     Route::patch('/company/{id}/enable', [CompanyController::class, 'enable']);
+
+    // Visits
+    Route::get('/visits', [VisitController::class, 'index']);
 });

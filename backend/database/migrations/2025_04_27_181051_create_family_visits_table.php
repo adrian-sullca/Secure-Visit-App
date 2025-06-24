@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('family_visits', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('entry_exit_id');
             $table->unsignedBigInteger('visit_id');
             $table->string('student_name');
             $table->string('student_surname');
@@ -20,6 +21,7 @@ return new class extends Migration
             $table->unsignedBigInteger('motive_id');
             $table->string('custom_motive')->nullable();
             $table->timestamps();
+            $table->foreign('entry_exit_id')->references('id')->on('entry_exits')->onDelete('cascade');
             $table->foreign('visit_id')->references('id')->on('visits')->onDelete('cascade');
             $table->foreign('motive_id')->references('id')->on('motives')->onDelete('cascade');
         });

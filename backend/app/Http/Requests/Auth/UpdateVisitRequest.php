@@ -15,7 +15,6 @@ class UpdateVisitRequest extends FormRequest
             'name' => 'required|string|max:255',
             'surname' => 'required|string|max:255',
             'email' => 'required|email',
-
             'visit_id' => 'required|integer',
             'student_name' => 'required|string|max:255',
             'student_surname' => 'required|string|max:255',

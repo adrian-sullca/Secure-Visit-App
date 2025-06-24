@@ -7,34 +7,43 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
 
-class StoreEntryRequest  extends FormRequest
+class UpdateEntryRequest extends FormRequest
 {
     public function rules(): array
     {
         return [
-            'visit_type' => 'required|in:family,professional',
-            // Visit
+            'visit_type' => 'required|string',
+            'visit_id' => 'required|integer',
+            'date_entry' => 'required|date',
+            'date_exit' => 'nullable|date|after:date_entry',
+
             'name' => 'required|string|max:255',
             'surname' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
+            'email' => [
+                'required',
+                'email',
+            ],
 
-            // Family Visit
+            'family_visit_id' => 'nullable|integer',
             'student_name' => 'nullable|string|max:255',
             'student_surname' => 'nullable|string|max:255',
             'student_course' => 'nullable|string|max:255',
             'motive_id' => 'nullable|integer',
-            'custom_motive' => 'nullable|string',
+            'custom_motive' => 'nullable|string|max:255',
 
-            // Professional Visit
-            'NIF' => 'nullable|string|max:50',
+            // professional_visits
+            'company_id' => 'nullable|integer',
+            'NIF' => 'nullable|string|max:255',
             'age' => 'nullable|integer',
-            'task' => 'nullable|string',
-            'service_id' => 'nullable|integer',
 
-            // Professional company
-            'CIF' => 'nullable|string|max:50',
+            //professional_services
+            'service_id' => 'nullable|integer',
+            'task' => 'nullable|string|max:255',
+
+            // companies
+            'CIF' => 'nullable|string|max:255',
             'company_name' => 'nullable|string|max:255',
-            'company_telephone' => 'nullable|string|max:20',
+            'company_telephone' => 'nullable|string|max:255'
         ];
     }
 
@@ -46,3 +55,20 @@ class StoreEntryRequest  extends FormRequest
         ], 422));
     }
 }
+
+/* 37
+1
+18
+professional
+2025-06-17 18:14:00
+NULL
+2025-06-17 18:14:21
+2025-06-19 23:03:19
+
+pro services
+24
+37
+9
+1
+tarea a realizar prueba
+*/

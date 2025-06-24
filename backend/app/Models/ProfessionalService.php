@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ProfessionalService extends Model
 {
     protected $fillable = [
+        'entry_exit_id',
         'professional_id',
         'service_id',
         'task',
