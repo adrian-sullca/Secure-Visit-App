@@ -55,4 +55,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Visits
     Route::get('/visits', [VisitController::class, 'index']);
+    Route::post('/visitor', [VisitController::class, 'store']);
+    Route::patch('/visitor/{visitor}', [VisitController::class, 'update']);
 });
